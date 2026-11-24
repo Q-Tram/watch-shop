@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ cá nhân - {{ site_settings.siteName or 'WatchStore' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="text-center p-3 border-bottom mb-3">
+                    <i class="bi bi-person-circle fs-1 text-warning"></i>
+                    <h5 class="fw-bold mt-2 mb-0">{{ current_user.fullName }}</h5>
+                    <small class="text-muted">{{ current_user.email }}</small>
+                    <div class="mt-2">
+                        <span class="badge bg-secondary">{{ current_user.role|capitalize }}</span>
+                    </div>
+                </div>
+
+                <div class="nav flex-column nav-pills gap-1">
+                    <a class="nav-link active rounded-3" href="{{ url_for('auth.profile') }}">
+                        <i class="bi bi-person me-2"></i>Thông tin tài khoản
+                    </a>
+                    <a class="nav-link rounded-3 text-dark" href="{{ url_for('orders.my_orders') }}">
+                        <i class="bi bi-bag-check me-2"></i>Đơn hàng của tôi
+                    </a>
+                    <a class="nav-link rounded-3 text-dark" href="{{ url_for('auth.change_password') }}">
+                        <i class="bi bi-key me-2"></i>Đổi mật khẩu
+                    </a>
+                    <hr class="my-2">
+                    <a class="nav-link rounded-3 text-danger" href="{{ url_for('auth.logout') }}">
+                        <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Form Content -->
+        <div class="col-md-8 col-lg-9">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <h4 class="fw-bold mb-1">Cập nhật hồ sơ cá nhân</h4>
+                <p class="text-muted small mb-4">Quản lý thông tin liên hệ và địa chỉ nhận hàng của bạn</p>
+
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Địa chỉ Email</label>
+                        <input type="email" class="form-control bg-light" value="{{ current_user.email }}" disabled readonly>
+                        <small class="text-muted">Email là định danh tài khoản và không thể tự đổi.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.fullName.label(class="form-label fw-semibold") }}
+                        {{ form.fullName(class="form-control" + (" is-invalid" if form.fullName.errors else "")) }}
+                        {% for error in form.fullName.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.phone.label(class="form-label fw-semibold") }}
+                        {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                        {% for error in form.phone.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.address.label(class="form-label fw-semibold") }}
+                        {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows=3) }}
+                        {% for error in form.address.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        {{ form.submit(class="btn btn-gold rounded-pill px-4 fw-bold") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

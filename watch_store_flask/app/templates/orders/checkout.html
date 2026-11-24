@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Thanh toán đơn hàng - {{ site_settings.siteName or 'WatchStore' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('cart.view_cart') }}" class="text-decoration-none text-muted">Giỏ hàng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Thanh toán</li>
+        </ol>
+    </nav>
+
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Xác nhận và Thanh toán đơn hàng</h2>
+        <p class="text-muted small mb-0">Vui lòng cung cấp địa chỉ nhận hàng và lựa chọn phương thức thanh toán phù hợp</p>
+    </div>
+
+    <div class="row g-4 align-items-start">
+        <!-- Form Section -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-4">
+                <h4 class="fw-bold mb-3 border-bottom pb-2">Thông tin giao hàng</h4>
+
+                <form method="POST" id="checkoutForm" novalidate>
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="qr_paid_confirmed" id="qrPaidConfirmed" value="0">
+
+                    <div class="mb-3">
+                        {{ form.fullName.label(class="form-label fw-semibold") }}
+                        {{ form.fullName(class="form-control form-control-lg" + (" is-invalid" if form.fullName.errors else ""), placeholder="Họ và tên người nhận") }}
+                        {% for error in form.fullName.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.phone.label(class="form-label fw-semibold") }}
+                        {{ form.phone(class="form-control form-control-lg" + (" is-invalid" if form.phone.errors else ""), placeholder="Số điện thoại nhận hàng") }}
+                        {% for error in form.phone.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label fw-semibold") }}
+                        {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows=2, placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố") }}
+                        {% for error in form.address.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.note.label(class="form-label fw-semibold") }}
+                        {{ form.note(class="form-control", rows=2, placeholder="Ghi chú thêm cho người giao hàng (ví dụ: giao giờ hành chính)") }}
+                    </div>
+
+                    <h4 class="fw-bold mb-3 border-bottom pb-2 mt-4">Phương thức thanh toán</h4>
+
+                    <div class="mb-4">
+                        {% for subfield in form.paymentMethod %}
+                        <div class="form-check p-3 border rounded-3 mb-2 bg-light d-flex align-items-center gap-3">
+                            {{ subfield(class="form-check-input mt-0", id=subfield.id) }}
+                            <label class="form-check-label fw-semibold text-dark w-100" for="{{ subfield.id }}">
+                                {% if subfield.data == 'COD' %}
+                                    <i class="bi bi-cash-stack text-success fs-5 me-2"></i> {{ subfield.label.text }}
+                                    <small class="d-block text-muted fw-normal">Thanh toán bằng tiền mặt khi nhận đồng hồ tận tay</small>
+                                {% else %}
+                                    <i class="bi bi-qr-code text-warning fs-5 me-2"></i> {{ subfield.label.text }}
+                                    <small class="d-block text-muted fw-normal">Quét mã QR qua ứng dụng ngân hàng (Mobile Banking)</small>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                        {% for error in form.paymentMethod.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Dynamic QR Payment Box -->
+                    <div id="qrPaymentBox" class="qr-payment-card mb-4" style="display: none;">
+                        <h5 class="fw-bold text-dark mb-1"><i class="bi bi-qr-code-scan text-warning me-2"></i>Quét mã QR để thanh toán</h5>
+                        <p class="text-muted small mb-3">Mở ứng dụng ngân hàng bất kỳ để quét mã và chuyển tiền tự động</p>
+
+                        <div class="qr-image-container my-3">
+                            <img src="{{ qr_image_url }}" alt="QR Code Payment" class="img-fluid rounded-3 border p-2 bg-white shadow-sm" style="max-width: 250px;">
+                        </div>
+
+                        <div class="p-3 bg-light rounded-3 text-start small mb-3 border">
+                            <div class="row g-2">
+                                <div class="col-6"><strong>Ngân hàng:</strong> {{ payment_settings.bankName }}</div>
+                                <div class="col-6"><strong>Số tài khoản:</strong> <span class="text-danger fw-bold">{{ payment_settings.accountNumber }}</span></div>
+                                <div class="col-6"><strong>Chủ tài khoản:</strong> {{ payment_settings.accountName }}</div>
+                                <div class="col-6"><strong>Số tiền:</strong> <span class="text-danger fw-bold">{{ cart.total_amount|currency }}</span></div>
+                                <div class="col-12"><strong>Nội dung CK:</strong> <span class="badge bg-secondary">{{ payment_settings.transferContent }}</span></div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btnConfirmQrPaid" class="btn btn-success btn-lg rounded-pill px-4 fw-bold w-100">
+                            <i class="bi bi-check2-circle me-2"></i>Tôi đã chuyển khoản thành công
+                        </button>
+                    </div>
+
+                    <div id="codSubmitBox" class="d-grid">
+                        <button type="submit" class="btn btn-gold btn-lg rounded-pill fw-bold">
+                            <i class="bi bi-bag-check me-2"></i>Xác nhận đặt hàng COD
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Items Summary Column -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 80px;">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">Đơn hàng của bạn ({{ cart.total_quantity }})</h5>
+
+                <div class="cart-items-preview mb-3" style="max-height: 320px; overflow-y: auto;">
+                    {% for it in cart.cart_items %}
+                    <div class="d-flex align-items-center gap-3 py-2 border-bottom">
+                        <img src="{{ it.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=100&q=80' }}" alt="{{ it.name }}" class="rounded-3 border" style="width: 55px; height: 55px; object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 fw-semibold text-truncate small" style="max-width: 180px;">{{ it.name }}</h6>
+                            <small class="text-muted">SL: {{ it.quantity }} x {{ it.price|currency }}</small>
+                        </div>
+                        <span class="fw-bold small text-dark">{{ it.subtotal|currency }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-between mb-2 text-secondary">
+                    <span>Tổng tiền hàng:</span>
+                    <span class="fw-semibold text-dark">{{ cart.total_amount|currency }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3 text-secondary">
+                    <span>Phí vận chuyển:</span>
+                    <span class="text-success fw-bold">0 đ (Miễn phí)</span>
+                </div>
+
+                <hr class="my-2">
+
+                <div class="d-flex justify-content-between align-items-baseline mb-4">
+                    <span class="fw-bold fs-5 text-dark">Tổng cần trả:</span>
+                    <span class="fs-3 fw-bold text-danger">{{ cart.total_amount|currency }}</span>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 text-muted small">
+                    <p class="mb-1"><i class="bi bi-shield-check text-warning me-1"></i>Đơn hàng được lưu giữ thông tin sản phẩm và giá chuẩn xác tại thời điểm đặt.</p>
+                    <p class="mb-0"><i class="bi bi-envelope-check text-warning me-1"></i>Hệ thống tự động gửi thông báo xác nhận qua Email (nếu máy chủ cấu hình SMTP).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const radioCOD = document.getElementById("paymentMethod-0");
+    const radioQR = document.getElementById("paymentMethod-1");
+    const qrBox = document.getElementById("qrPaymentBox");
+    const codBox = document.getElementById("codSubmitBox");
+    const checkoutForm = document.getElementById("checkoutForm");
+    const qrPaidInput = document.getElementById("qrPaidConfirmed");
+    const btnConfirmQr = document.getElementById("btnConfirmQrPaid");
+
+    function togglePaymentMethod() {
+        if (radioQR && radioQR.checked) {
+            qrBox.style.display = "block";
+            codBox.style.display = "none";
+        } else {
+            qrBox.style.display = "none";
+            codBox.style.display = "block";
+        }
+    }
+
+    if (radioCOD && radioQR) {
+        radioCOD.addEventListener("change", togglePaymentMethod);
+        radioQR.addEventListener("change", togglePaymentMethod);
+        togglePaymentMethod();
+    }
+
+    if (btnConfirmQr) {
+        btnConfirmQr.addEventListener("click", function () {
+            qrPaidInput.value = "1";
+            checkoutForm.submit();
+        });
+    }
+});
+</script>
+{% endblock %}

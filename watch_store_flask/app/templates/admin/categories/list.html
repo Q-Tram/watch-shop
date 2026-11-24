@@ -1,0 +1,62 @@
+{% extends "admin/layout.html" %}
+{% block title %}Quản lý danh mục{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-3 mb-4 border-bottom">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Quản lý danh mục & phân loại</h1>
+        <small class="text-muted">Quản trị các nhóm danh mục, giới tính và phân loại sản phẩm</small>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.category_create') }}" class="btn btn-gold rounded-pill px-3 fw-bold">
+            <i class="bi bi-plus-circle me-1"></i>Thêm danh mục mới
+        </a>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    {% if categories %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light small">
+                <tr>
+                    <th scope="col">Tên danh mục</th>
+                    <th scope="col">Slug định danh</th>
+                    <th scope="col">Nhóm</th>
+                    <th scope="col">Mô tả</th>
+                    <th scope="col" class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in categories %}
+                <tr>
+                    <td class="fw-bold text-dark">{{ c.name }}</td>
+                    <td><span class="font-monospace text-muted small">{{ c.slug }}</span></td>
+                    <td>
+                        <span class="badge bg-secondary-subtle text-secondary">{{ c.group }}</span>
+                    </td>
+                    <td class="small text-muted">{{ c.description or '—' }}</td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.category_edit', category_id=c.id) }}" class="btn btn-sm btn-outline-primary rounded-pill me-1">
+                            <i class="bi bi-pencil"></i> Sửa
+                        </a>
+                        <form method="POST" action="{{ url_for('admin.category_delete', category_id=c.id) }}" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-tags fs-1"></i>
+        <p class="mt-2 mb-0">Chưa có danh mục nào.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

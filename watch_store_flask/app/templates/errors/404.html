@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}404 - Không tìm thấy trang{% endblock %}
+{% block content %}
+<div class="container py-5 text-center my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <i class="bi bi-compass text-warning" style="font-size: 5rem;"></i>
+            <h1 class="display-4 fw-bold mt-3">404</h1>
+            <h4 class="text-secondary mb-3">Không tìm thấy trang yêu cầu</h4>
+            <p class="text-muted">Đường dẫn bạn truy cập có thể đã bị thay đổi, xóa bỏ hoặc không tồn tại trên hệ thống WatchStore.</p>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{{ url_for('main.index') }}" class="btn btn-gold rounded-pill px-4">
+                    <i class="bi bi-house-door me-2"></i>Về trang chủ
+                </a>
+                <a href="{{ url_for('products.catalog') }}" class="btn btn-outline-dark rounded-pill px-4">
+                    <i class="bi bi-grid me-2"></i>Xem sản phẩm
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

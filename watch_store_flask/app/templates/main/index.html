@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Trang chủ - Đồng hồ chính hãng{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-banner">
+    <div class="container py-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="hero-tag mb-2 d-inline-block">Luxury & Timeless Watches</span>
+                <h1 class="display-4 fw-bold text-white mb-3">Khám phá phong cách thời thượng với những tuyệt tác đồng hồ</h1>
+                <p class="lead text-light opacity-75 mb-4">
+                    {{ site_settings.footerDescription or 'WatchStore mang đến các mẫu đồng hồ hiện đại, thanh lịch và phù hợp cho mọi phong cách sống.' }}
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('products.catalog') }}" class="btn btn-gold btn-lg rounded-pill px-4">
+                        <i class="bi bi-bag-check me-2"></i>Khám phá bộ sưu tập
+                    </a>
+                    <a href="{{ url_for('main.contact') }}" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                        <i class="bi bi-chat-dots me-2"></i>Tư vấn miễn phí
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center">
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80" alt="Luxury Watch" class="img-fluid rounded-4 shadow-lg border border-secondary" style="max-height: 380px; object-fit: cover;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Values Highlights Bar -->
+<section class="py-4 bg-white border-bottom shadow-sm">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-4 d-flex align-items-center justify-content-center gap-3">
+                <i class="bi bi-shield-check text-warning fs-1"></i>
+                <div class="text-start">
+                    <h6 class="fw-bold mb-0">100% Chính Hãng</h6>
+                    <small class="text-muted">Đầy đủ hộp, sổ, thẻ bảo hành quốc tế</small>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-center justify-content-center gap-3 border-start-md border-end-md">
+                <i class="bi bi-truck text-warning fs-1"></i>
+                <div class="text-start">
+                    <h6 class="fw-bold mb-0">Giao Hàng Toàn Quốc</h6>
+                    <small class="text-muted">Hỗ trợ COD hoặc chuyển khoản quét mã QR</small>
+                </div>
+            </div>
+            <div class="col-md-4 d-flex align-items-center justify-content-center gap-3">
+                <i class="bi bi-arrow-repeat text-warning fs-1"></i>
+                <div class="text-start">
+                    <h6 class="fw-bold mb-0">Bảo Hành 24 Tháng</h6>
+                    <small class="text-muted">Đổi mới trong 7 ngày nếu lỗi nhà sản xuất</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <span class="text-warning text-uppercase fw-bold small tracking-wide">Bộ sưu tập nổi bật</span>
+                <h2 class="fw-bold mb-0">Đồng hồ được yêu thích nhất</h2>
+            </div>
+            <a href="{{ url_for('products.catalog') }}" class="btn btn-outline-dark rounded-pill px-3">
+                Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        {% if featured_products %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for p in featured_products %}
+            <div class="col">
+                <div class="product-card">
+                    <a href="{{ url_for('products.detail', product_id=p.id) }}" class="product-img-wrapper">
+                        <img src="{{ p.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=500&q=80' }}" alt="{{ p.name }}">
+                    </a>
+                    <div class="p-3 d-flex flex-column flex-grow-1">
+                        <span class="product-badge-brand">{{ p.brand or 'WATCH' }}</span>
+                        <h6 class="fw-bold text-dark mt-1 mb-2 text-truncate" title="{{ p.name }}">
+                            <a href="{{ url_for('products.detail', product_id=p.id) }}" class="text-decoration-none text-dark">{{ p.name }}</a>
+                        </h6>
+                        <div class="mt-auto">
+                            <div class="product-price mb-2">{{ p.price|currency }}</div>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('products.detail', product_id=p.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5 bg-white rounded-3 shadow-sm">
+            <i class="bi bi-inbox text-muted fs-1"></i>
+            <p class="text-muted mt-2 mb-0">Chưa có sản phẩm nổi bật nào.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Brand Story Banner -->
+<section class="py-5 bg-light border-top">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80" alt="Watchmaking Art" class="img-fluid rounded-4 shadow">
+            </div>
+            <div class="col-lg-6">
+                <span class="text-warning text-uppercase fw-bold small tracking-wide">Nghệ thuật chế tác</span>
+                <h2 class="fw-bold mt-1 mb-3">Từng giây phút đều là một kiệt tác</h2>
+                <p class="text-secondary mb-3">
+                    Tại {{ site_settings.siteName or 'WatchStore' }}, chúng tôi tin rằng chiếc đồng hồ không chỉ là công cụ đo đếm thời gian, mà còn là bản tuyên ngôn về phong cách cá nhân, sự chỉn chu và đẳng cấp của người đeo.
+                </p>
+                <ul class="list-unstyled text-secondary mb-4">
+                    <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>Tuyển chọn từ những thương hiệu hàng đầu Thụy Sỹ, Nhật Bản, Đức</li>
+                    <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>Quy trình kiểm tra chất lượng và độ chống nước nghiêm ngặt</li>
+                    <li class="mb-2"><i class="bi bi-check2-circle text-warning me-2"></i>Đội ngũ kỹ thuật viên giàu kinh nghiệm đồng hành trọn đời</li>
+                </ul>
+                <a href="{{ url_for('products.catalog') }}" class="btn btn-gold rounded-pill px-4">
+                    Khám phá ngay <i class="bi bi-chevron-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

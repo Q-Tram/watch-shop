@@ -1,0 +1,124 @@
+{% extends "admin/layout.html" %}
+{% block title %}Xử lý đơn hàng #{{ order.id[-6:]|upper }}{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-3 mb-4 border-bottom">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Xử lý đơn hàng <span class="font-monospace text-primary">#{{ order.id[-6:]|upper }}</span></h1>
+        <small class="text-muted">Mã ID MongoDB: {{ order.id }} &bull; Đặt lúc: {{ order.createdAt|datetime_format }}</small>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-secondary rounded-pill btn-sm px-3">
+            <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Items snapshot -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Danh sách sản phẩm trong đơn</h5>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light small">
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th class="text-center">Đơn giá</th>
+                            <th class="text-center">Số lượng</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for it in order.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="{{ it.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=100&q=80' }}" alt="{{ it.name }}" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;">
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold text-dark small">{{ it.name }}</h6>
+                                        <small class="text-muted font-monospace">Mã: {{ it.product }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center small">{{ it.price|currency }}</td>
+                            <td class="text-center fw-bold">{{ it.quantity }}</td>
+                            <td class="text-end fw-bold text-danger">{{ (it.price * it.quantity)|currency }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">Tổng thanh toán:</td>
+                            <td class="text-end fs-5 fw-bold text-danger">{{ order.totalAmount|currency }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Customer & Shipping Card -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Thông tin người nhận & Địa chỉ giao hàng</h5>
+            <div class="row g-3 small">
+                <div class="col-md-6">
+                    <span class="text-muted d-block">Họ và tên người nhận:</span>
+                    <strong class="fs-6 text-dark">{{ order.shippingInfo.fullName }}</strong>
+                </div>
+                <div class="col-md-6">
+                    <span class="text-muted d-block">Số điện thoại:</span>
+                    <strong class="fs-6 text-dark">{{ order.shippingInfo.phone }}</strong>
+                </div>
+                <div class="col-12">
+                    <span class="text-muted d-block">Địa chỉ nhận hàng:</span>
+                    <span class="fs-6 text-dark">{{ order.shippingInfo.address }}</span>
+                </div>
+                {% if order.shippingInfo.note %}
+                <div class="col-12">
+                    <span class="text-muted d-block">Ghi chú của khách hàng:</span>
+                    <span class="fst-italic text-secondary">{{ order.shippingInfo.note }}</span>
+                </div>
+                {% endif %}
+                {% if order.user_info %}
+                <div class="col-12 pt-2 border-top">
+                    <span class="text-muted">Tài khoản thành viên: </span>
+                    <strong>{{ order.user_info.fullName }}</strong> ({{ order.user_info.email }})
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Status Update Form -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 80px;">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Cập nhật trạng thái đơn</h5>
+
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    {{ form.orderStatus.label(class="form-label fw-semibold") }}
+                    {{ form.orderStatus(class="form-select form-select-lg") }}
+                </div>
+
+                <div class="mb-4">
+                    {{ form.paymentStatus.label(class="form-label fw-semibold") }}
+                    {{ form.paymentStatus(class="form-select") }}
+                </div>
+
+                <div class="d-grid mb-3">
+                    {{ form.submit(class="btn btn-gold btn-lg rounded-pill fw-bold") }}
+                </div>
+            </form>
+
+            <div class="p-3 bg-light rounded-3 small text-muted mt-3">
+                <div class="mb-1"><strong>Phương thức TT:</strong> {{ order.paymentMethod }}</div>
+                <div class="mb-1"><strong>Ngày tạo:</strong> {{ order.createdAt|datetime_format }}</div>
+                <div><strong>Lần sửa cuối:</strong> {{ order.updatedAt|datetime_format }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

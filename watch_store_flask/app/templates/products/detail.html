@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} - {{ site_settings.siteName or 'WatchStore' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('products.catalog') }}" class="text-decoration-none text-muted">Sản phẩm</a></li>
+            {% if product.category %}
+            <li class="breadcrumb-item"><a href="{{ url_for('products.catalog', category=product.category) }}" class="text-decoration-none text-muted">{{ product.category }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 200px;">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Product Detail Layout -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mb-5">
+        <div class="row g-5 align-items-center">
+            <!-- Product Image -->
+            <div class="col-lg-6 text-center">
+                <div class="position-relative p-3 bg-light rounded-4 border">
+                    <img src="{{ product.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=700&q=80' }}" alt="{{ product.name }}" class="img-fluid rounded-3" style="max-height: 480px; object-fit: contain;">
+                    {% if product.brand %}
+                    <span class="position-absolute top-0 start-0 m-3 badge bg-dark text-warning px-3 py-2 text-uppercase fs-6">
+                        {{ product.brand }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Product Specs & Actions -->
+            <div class="col-lg-6">
+                <div class="mb-2">
+                    <span class="text-uppercase fw-bold text-warning small tracking-wide">{{ product.category or 'Đồng hồ cao cấp' }}</span>
+                </div>
+                <h1 class="h2 fw-bold text-dark mb-3">{{ product.name }}</h1>
+
+                <!-- Price & Currency conversion -->
+                <div class="p-3 bg-light rounded-3 mb-4 d-flex align-items-baseline gap-3">
+                    <span class="display-6 fw-bold text-danger">{{ product.price|currency }}</span>
+                    <span class="text-muted fw-semibold fs-5">≈ ${{ usd_price }} USD</span>
+                </div>
+
+                <!-- Stock & Availability -->
+                <div class="mb-4 d-flex align-items-center gap-3">
+                    <span class="fw-semibold">Tình trạng:</span>
+                    {% if product.stock > 0 %}
+                        <span class="badge bg-success-subtle text-success fs-6 px-3 py-1">
+                            <i class="bi bi-check-circle me-1"></i>Còn hàng ({{ product.stock }} sản phẩm trong kho)
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger fs-6 px-3 py-1">
+                            <i class="bi bi-x-circle me-1"></i>Tạm hết hàng
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2">Mô tả sản phẩm:</h6>
+                    <p class="text-secondary lh-base" style="white-space: pre-line;">
+                        {{ product.description or 'Sản phẩm đồng hồ chính hãng với độ hoàn thiện tinh xảo, kính Sapphire chống trầy xước, bộ máy vận hành chính xác và bền bỉ theo thời gian.' }}
+                    </p>
+                </div>
+
+                <!-- Add to cart form -->
+                {% if product.stock > 0 %}
+                <form method="POST" action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" class="mb-4">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label class="form-label fw-semibold mb-0">Số lượng:</label>
+                        </div>
+                        <div class="col-auto">
+                            <div class="input-group" style="width: 130px;">
+                                <input type="number" name="quantity" class="form-control text-center quantity-input fw-bold" value="1" min="1" max="{{ product.stock }}">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <button type="submit" class="btn btn-gold btn-lg rounded-pill px-4 fw-bold w-100">
+                                <i class="bi bi-cart-plus me-2"></i>Thêm vào giỏ hàng
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-secondary text-center mb-4">
+                    Sản phẩm này hiện tại đã hết hàng. Vui lòng quay lại sau hoặc liên hệ hỗ trợ.
+                </div>
+                {% endif %}
+
+                <!-- Guarantee & Services Perks -->
+                <div class="row g-2 pt-3 border-top text-secondary small">
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-warning fs-5"></i> Cam kết 100% chính hãng
+                    </div>
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <i class="bi bi-truck text-warning fs-5"></i> Giao hàng toàn quốc
+                    </div>
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-repeat text-warning fs-5"></i> Đổi trả trong 7 ngày
+                    </div>
+                    <div class="col-6 d-flex align-items-center gap-2">
+                        <i class="bi bi-award text-warning fs-5"></i> Bảo hành 2 năm
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="my-5">
+        <h4 class="fw-bold mb-4">Sản phẩm cùng danh mục</h4>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+            {% for r in related_products %}
+            <div class="col">
+                <div class="product-card">
+                    <a href="{{ url_for('products.detail', product_id=r.id) }}" class="product-img-wrapper">
+                        <img src="{{ r.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=500&q=80' }}" alt="{{ r.name }}">
+                    </a>
+                    <div class="p-3 d-flex flex-column flex-grow-1">
+                        <span class="product-badge-brand">{{ r.brand or 'WATCH' }}</span>
+                        <h6 class="fw-bold text-dark mt-1 mb-2 text-truncate" title="{{ r.name }}">
+                            <a href="{{ url_for('products.detail', product_id=r.id) }}" class="text-decoration-none text-dark">{{ r.name }}</a>
+                        </h6>
+                        <div class="mt-auto">
+                            <div class="product-price mb-2">{{ r.price|currency }}</div>
+                            <a href="{{ url_for('products.detail', product_id=r.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill w-100">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

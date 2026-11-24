@@ -1,0 +1,98 @@
+{% extends "admin/layout.html" %}
+{% block title %}Quản lý khách hàng{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-3 mb-4 border-bottom">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Quản lý khách hàng thành viên</h1>
+        <small class="text-muted">Tổng số khách hàng đăng ký: <strong>{{ total_count }}</strong></small>
+    </div>
+</div>
+
+<!-- Search box -->
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="GET" action="{{ url_for('admin.customers') }}" class="row g-2">
+        <div class="col-md-9">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="search" value="{{ search }}" class="form-control bg-light border-start-0" placeholder="Tìm theo tên, email hoặc số điện thoại...">
+            </div>
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-dark">Tìm kiếm</button>
+        </div>
+    </form>
+</div>
+
+<!-- Customers Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    {% if customers %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light small">
+                <tr>
+                    <th scope="col" style="width: 60px;">STT</th>
+                    <th scope="col">Họ và tên</th>
+                    <th scope="col">Địa chỉ Email</th>
+                    <th scope="col">Số điện thoại</th>
+                    <th scope="col">Ngày đăng ký</th>
+                    <th scope="col" class="text-center">Trạng thái</th>
+                    <th scope="col" class="text-end" style="width: 140px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in customers %}
+                <tr>
+                    <td class="text-muted">{{ loop.index + (page - 1) * 10 }}</td>
+                    <td class="fw-semibold text-dark">{{ u.fullName }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.phone or '—' }}</td>
+                    <td class="small text-muted">{{ u.createdAt|datetime_format }}</td>
+                    <td class="text-center">
+                        {% if u.isActive %}
+                            <span class="badge bg-success-subtle text-success">Đang hoạt động</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger">Đã khóa</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <form method="POST" action="{{ url_for('admin.customer_toggle_lock', customer_id=u.id) }}" class="d-inline">
+                            {% if u.isActive %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" onclick="return confirm('Bạn có chắc chắn muốn khóa tài khoản này? Khách hàng sẽ không thể đăng nhập.');">
+                                    <i class="bi bi-lock me-1"></i>Khóa
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill">
+                                    <i class="bi bi-unlock me-1"></i>Mở khóa
+                                </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm">
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('admin.customers', page=p, search=search) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-people fs-1"></i>
+        <p class="mt-2 mb-0">Không có tài khoản khách hàng nào.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

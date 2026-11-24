@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Chi tiết đơn hàng #{{ order.id[-6:]|upper }} - {{ site_settings.siteName or 'WatchStore' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('orders.my_orders') }}" class="text-decoration-none text-muted">Đơn hàng của tôi</a></li>
+            <li class="breadcrumb-item active" aria-current="page">#{{ order.id[-6:]|upper }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">Đơn hàng <span class="font-monospace text-primary">#{{ order.id[-6:]|upper }}</span></h3>
+            <small class="text-muted">Mã ID đầy đủ: {{ order.id }} &bull; Đặt lúc: {{ order.createdAt|datetime_format }}</small>
+        </div>
+        <div>
+            <span class="badge bg-{{ order.status_badge }} fs-6 px-3 py-2">
+                Trạng thái: {{ order.status_label }}
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Order Items Snapshot Table -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">Danh sách sản phẩm đã đặt</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Đơn giá</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for it in order.items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ it.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=100&q=80' }}" alt="{{ it.name }}" class="rounded-3 border" style="width: 55px; height: 55px; object-fit: cover;">
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold text-dark">{{ it.name }}</h6>
+                                            <small class="text-muted font-monospace">Mã SP: {{ it.product }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">{{ it.price|currency }}</td>
+                                <td class="text-center fw-bold">{{ it.quantity }}</td>
+                                <td class="text-end fw-bold text-danger">{{ (it.price * it.quantity)|currency }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end fw-semibold">Tổng giá trị đơn hàng:</td>
+                                <td class="text-end fs-5 fw-bold text-danger">{{ order.totalAmount|currency }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="p-3 bg-light rounded-3 text-muted small mt-2">
+                    <i class="bi bi-info-circle me-1 text-primary"></i>
+                    Thông tin và đơn giá sản phẩm được lưu snapshot bất biến tại thời điểm đặt hàng.
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping & Payment info column -->
+        <div class="col-lg-4">
+            <!-- Shipping Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                <h6 class="fw-bold text-uppercase small text-warning mb-3">Thông tin giao nhận</h6>
+                <div class="small">
+                    <p class="mb-2"><strong>Người nhận:</strong> {{ order.shippingInfo.fullName }}</p>
+                    <p class="mb-2"><strong>Số điện thoại:</strong> {{ order.shippingInfo.phone }}</p>
+                    <p class="mb-2"><strong>Địa chỉ:</strong> {{ order.shippingInfo.address }}</p>
+                    {% if order.shippingInfo.note %}
+                    <p class="mb-0"><strong>Ghi chú:</strong> <span class="fst-italic">{{ order.shippingInfo.note }}</span></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h6 class="fw-bold text-uppercase small text-warning mb-3">Thông tin thanh toán</h6>
+                <div class="small">
+                    <p class="mb-2"><strong>Phương thức:</strong> {{ order.paymentMethod }}</p>
+                    <p class="mb-2"><strong>Trạng thái thanh toán:</strong>
+                        {% if order.paymentStatus == 'paid' %}
+                            <span class="badge bg-success">Đã thanh toán</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-0"><strong>Cập nhật lần cuối:</strong> {{ order.updatedAt|datetime_format }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

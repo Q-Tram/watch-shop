@@ -1,0 +1,111 @@
+{% extends "admin/layout.html" %}
+{% block title %}Quản lý đơn hàng{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-3 mb-4 border-bottom">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Quản lý toàn bộ đơn hàng</h1>
+        <small class="text-muted">Tổng cộng <strong>{{ total_count }}</strong> đơn hàng trong hệ thống</small>
+    </div>
+</div>
+
+<!-- Search & Status filter tabs -->
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a href="{{ url_for('admin.orders') }}" class="btn btn-sm rounded-pill {% if not active_status %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+            Tất cả ({{ total_count }})
+        </a>
+        {% for st in statuses %}
+        <a href="{{ url_for('admin.orders', status=st) }}" class="btn btn-sm rounded-pill {% if active_status == st %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+            {% if st == 'pending' %}Chờ xác nhận
+            {% elif st == 'confirmed' %}Đã xác nhận
+            {% elif st == 'shipping' %}Đang giao
+            {% elif st == 'delivered' %}Đã giao
+            {% elif st == 'cancelled' %}Đã hủy{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+
+    <form method="GET" action="{{ url_for('admin.orders') }}" class="row g-2">
+        <input type="hidden" name="status" value="{{ active_status }}">
+        <div class="col-md-9">
+            <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Tìm theo tên khách hàng, số điện thoại hoặc địa chỉ...">
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-dark">Tìm kiếm đơn</button>
+        </div>
+    </form>
+</div>
+
+<!-- Orders Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    {% if orders %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light small">
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Ngày đặt</th>
+                    <th>Khách hàng</th>
+                    <th>Số điện thoại</th>
+                    <th>Số SP</th>
+                    <th>Tổng tiền</th>
+                    <th>PT Thanh toán</th>
+                    <th>TT Thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ord in orders %}
+                <tr>
+                    <td class="fw-bold font-monospace text-primary">#{{ ord.id[-6:]|upper }}</td>
+                    <td class="small text-muted">{{ ord.createdAt|datetime_format }}</td>
+                    <td class="fw-semibold">{{ ord.shippingInfo.fullName }}</td>
+                    <td class="small">{{ ord.shippingInfo.phone }}</td>
+                    <td class="small">{{ ord.items|length }} SP</td>
+                    <td class="fw-bold text-danger">{{ ord.totalAmount|currency }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ ord.paymentMethod }}</span></td>
+                    <td>
+                        {% if ord.paymentStatus == 'paid' %}
+                            <span class="badge bg-success-subtle text-success">Đã thanh toán</span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-dark">Chưa thanh toán</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-{{ ord.status_badge }}">{{ ord.status_label }}</span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.order_detail', order_id=ord.id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                            Chi tiết &rarr;
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm">
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('admin.orders', page=p, status=active_status, search=search) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-receipt fs-1"></i>
+        <p class="mt-2 mb-0">Không tìm thấy đơn hàng nào.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,134 @@
+{% extends "admin/layout.html" %}
+{% block title %}Quản lý sản phẩm{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-3 mb-4 border-bottom">
+    <div>
+        <h1 class="h3 fw-bold mb-0">Quản lý danh sách sản phẩm</h1>
+        <small class="text-muted">Tổng cộng <strong>{{ total_count }}</strong> sản phẩm trong kho dữ liệu</small>
+    </div>
+    <div>
+        <a href="{{ url_for('admin.product_create') }}" class="btn btn-gold rounded-pill px-3 fw-bold">
+            <i class="bi bi-plus-circle me-1"></i>Thêm sản phẩm mới
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter bar -->
+<div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+    <form method="GET" action="{{ url_for('admin.products') }}" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" name="keyword" value="{{ keyword }}" class="form-control bg-light border-start-0" placeholder="Tìm theo tên hoặc thương hiệu...">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="category" class="form-select bg-light">
+                <option value="">-- Tất cả danh mục --</option>
+                {% for c in categories %}
+                <option value="{{ c.name }}" {% if active_category == c.name %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select bg-light">
+                <option value="">-- Trạng thái --</option>
+                <option value="Hiện" {% if active_status == 'Hiện' %}selected{% endif %}>Hiện</option>
+                <option value="Ẩn" {% if active_status == 'Ẩn' %}selected{% endif %}>Ẩn</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-dark rounded-3">Tìm kiếm</button>
+        </div>
+    </form>
+</div>
+
+<!-- Products Table -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    {% if products %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light small">
+                <tr>
+                    <th scope="col" style="width: 70px;">Ảnh</th>
+                    <th scope="col">Tên sản phẩm</th>
+                    <th scope="col">Thương hiệu</th>
+                    <th scope="col">Danh mục</th>
+                    <th scope="col">Giá bán</th>
+                    <th scope="col" class="text-center">Kho</th>
+                    <th scope="col" class="text-center">Trạng thái</th>
+                    <th scope="col" class="text-end" style="min-width: 160px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        <img src="{{ p.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=100&q=80' }}" alt="{{ p.name }}" class="rounded-3 border" style="width: 50px; height: 50px; object-fit: cover;">
+                    </td>
+                    <td>
+                        <div class="fw-semibold text-dark">{{ p.name }}</div>
+                        <small class="text-muted font-monospace">{{ p.id }}</small>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ p.brand or 'N/A' }}</span></td>
+                    <td>{{ p.category or 'N/A' }}</td>
+                    <td class="fw-bold text-danger">{{ p.price|currency }}</td>
+                    <td class="text-center">
+                        {% if p.stock > 0 %}
+                            <span class="badge bg-success-subtle text-success">{{ p.stock }}</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <form method="POST" action="{{ url_for('admin.product_toggle_status', product_id=p.id) }}" class="d-inline">
+                            {% if p.status == 'Hiện' %}
+                                <button type="submit" class="btn btn-sm btn-outline-success border-0 py-0" title="Nhấn để Ẩn sản phẩm">
+                                    <i class="bi bi-eye-fill me-1"></i>Hiện
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-sm btn-outline-secondary border-0 py-0" title="Nhấn để Hiện sản phẩm">
+                                    <i class="bi bi-eye-slash-fill me-1"></i>Ẩn
+                                </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="btn btn-sm btn-outline-primary rounded-pill me-1" title="Chỉnh sửa">
+                            <i class="bi bi-pencil"></i> Sửa
+                        </a>
+                        <form method="POST" action="{{ url_for('admin.product_delete', product_id=p.id) }}" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Xóa">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm">
+            {% for pnum in range(1, total_pages + 1) %}
+            <li class="page-item {% if pnum == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('admin.products', page=pnum, keyword=keyword, category=active_category, status=active_status) }}">{{ pnum }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-inbox fs-1"></i>
+        <p class="mt-2 mb-0">Không có sản phẩm nào phù hợp.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập - {{ site_settings.siteName or 'WatchStore' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-3">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 rounded-circle bg-light text-warning mb-2">
+                        <i class="bi bi-person-fill-lock fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Đăng nhập tài khoản</h3>
+                    <p class="text-muted small">Chào mừng bạn quay lại với {{ site_settings.siteName or 'WatchStore' }}</p>
+                </div>
+
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label fw-semibold") }}
+                        {{ form.email(class="form-control form-control-lg" + (" is-invalid" if form.email.errors else ""), placeholder="nhapemail@example.com") }}
+                        {% for error in form.email.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label fw-semibold") }}
+                        {{ form.password(class="form-control form-control-lg" + (" is-invalid" if form.password.errors else ""), placeholder="Nhập mật khẩu") }}
+                        {% for error in form.password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        {{ form.remember(class="form-check-input") }}
+                        {{ form.remember.label(class="form-check-label text-muted small") }}
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        {{ form.submit(class="btn btn-gold btn-lg rounded-pill fw-bold") }}
+                    </div>
+
+                    <div class="text-center small text-muted">
+                        Chưa có tài khoản?
+                        <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-semibold text-warning">Đăng ký ngay</a>
+                    </div>
+                </form>
+
+                <div class="mt-4 p-3 rounded-3 bg-light border text-start small">
+                    <span class="fw-bold text-dark d-block mb-1"><i class="bi bi-info-circle me-1 text-primary"></i>Tài khoản Demo (Local):</span>
+                    <div class="text-muted"><strong>Admin:</strong> admin@gmail.com / 123456</div>
+                    <div class="text-muted"><strong>Khách hàng:</strong> khachhang@gmail.com / 123456</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

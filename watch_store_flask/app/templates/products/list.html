@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Danh sách sản phẩm - {{ site_settings.siteName or 'WatchStore' }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none text-muted">Trang chủ</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Sản phẩm</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Bộ sưu tập đồng hồ chính hãng</h2>
+            <p class="text-muted small mb-0">Tìm thấy <strong>{{ total_count }}</strong> sản phẩm phù hợp</p>
+        </div>
+        <!-- Currency conversion info badge (Network feature) -->
+        <div class="badge bg-light text-dark border p-2 d-flex align-items-center gap-2">
+            <i class="bi bi-currency-exchange text-warning fs-6"></i>
+            <span>Tỷ giá ngoại tệ trực tuyến: <strong>1 USD ≈ {{ "{:,.0f}".format(rate_vnd) }} VNĐ</strong></span>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <form method="GET" action="{{ url_for('products.catalog') }}" class="row g-2 align-items-center">
+            <!-- Search Keyword -->
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="keyword" value="{{ keyword }}" class="form-control bg-light border-start-0" placeholder="Tìm kiếm tên, thương hiệu...">
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="col-lg-3 col-md-6">
+                <select name="category" class="form-select bg-light">
+                    <option value="">-- Tất cả danh mục --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.name }}" {% if active_category == cat.name %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Brand Filter -->
+            <div class="col-lg-2 col-md-4">
+                <select name="brand" class="form-select bg-light">
+                    <option value="">-- Thương hiệu --</option>
+                    {% for b in brands %}
+                    <option value="{{ b }}" {% if active_brand == b %}selected{% endif %}>{{ b }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="col-lg-2 col-md-4">
+                <select name="sort" class="form-select bg-light">
+                    <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Mới nhất</option>
+                    <option value="price_asc" {% if active_sort == 'price_asc' %}selected{% endif %}>Giá: Thấp đến Cao</option>
+                    <option value="price_desc" {% if active_sort == 'price_desc' %}selected{% endif %}>Giá: Cao đến Thấp</option>
+                    <option value="name_asc" {% if active_sort == 'name_asc' %}selected{% endif %}>Tên A - Z</option>
+                </select>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="col-lg-1 col-md-4 d-grid">
+                <button type="submit" class="btn btn-gold rounded-3 fw-semibold">Lọc</button>
+            </div>
+        </form>
+
+        <!-- Active Filter Tags -->
+        {% if keyword or active_category or active_brand %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-2 border-top">
+            <small class="text-muted">Bộ lọc đang áp dụng:</small>
+            {% if keyword %}
+                <span class="badge bg-secondary">Từ khóa: "{{ keyword }}"</span>
+            {% endif %}
+            {% if active_category %}
+                <span class="badge bg-secondary">Danh mục: {{ active_category }}</span>
+            {% endif %}
+            {% if active_brand %}
+                <span class="badge bg-secondary">Thương hiệu: {{ active_brand }}</span>
+            {% endif %}
+            <a href="{{ url_for('products.catalog') }}" class="small text-danger text-decoration-none ms-2">
+                <i class="bi bi-x-circle me-1"></i>Xóa bộ lọc
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Product Grid -->
+    {% if products %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
+        {% for p in products %}
+        <div class="col">
+            <div class="product-card">
+                <a href="{{ url_for('products.detail', product_id=p.id) }}" class="product-img-wrapper">
+                    <img src="{{ p.image or 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=500&q=80' }}" alt="{{ p.name }}" loading="lazy">
+                </a>
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="product-badge-brand">{{ p.brand or 'WATCH' }}</span>
+                        {% if p.stock > 0 %}
+                            <span class="badge bg-success-subtle text-success small">Còn hàng ({{ p.stock }})</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger small">Hết hàng</span>
+                        {% endif %}
+                    </div>
+
+                    <h6 class="fw-bold text-dark mt-1 mb-2 text-truncate" title="{{ p.name }}">
+                        <a href="{{ url_for('products.detail', product_id=p.id) }}" class="text-decoration-none text-dark">{{ p.name }}</a>
+                    </h6>
+
+                    <div class="mt-auto">
+                        <div class="d-flex align-items-baseline justify-content-between mb-2">
+                            <span class="product-price">{{ p.price|currency }}</span>
+                            <span class="product-price-usd">≈ ${{ "{:,.1f}".format(p.price / rate_vnd) }}</span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {% if p.stock > 0 %}
+                            <form method="POST" action="{{ url_for('cart.add_to_cart', product_id=p.id) }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-outline-warning text-dark btn-sm rounded-pill w-100 fw-semibold">
+                                    <i class="bi bi-cart-plus me-1"></i>Thêm giỏ hàng
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn btn-secondary btn-sm rounded-pill w-100" disabled>Hết hàng</button>
+                            {% endif %}
+                            <a href="{{ url_for('products.detail', product_id=p.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+                                Chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- MongoDB Real Pagination Controls -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation" class="d-flex justify-content-center my-4">
+        <ul class="pagination pagination-rounded shadow-sm">
+            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('products.catalog', page=page-1, keyword=keyword, category=active_category, brand=active_brand, sort=active_sort) }}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            {% for pnum in range(1, total_pages + 1) %}
+                {% if pnum == page %}
+                    <li class="page-item active"><span class="page-link bg-dark border-dark text-warning fw-bold">{{ pnum }}</span></li>
+                {% elif pnum <= 2 or pnum >= total_pages - 1 or (pnum >= page - 1 and pnum <= page + 1) %}
+                    <li class="page-item"><a class="page-link text-dark" href="{{ url_for('products.catalog', page=pnum, keyword=keyword, category=active_category, brand=active_brand, sort=active_sort) }}">{{ pnum }}</a></li>
+                {% elif pnum == 3 or pnum == total_pages - 2 %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('products.catalog', page=page+1, keyword=keyword, category=active_category, brand=active_brand, sort=active_sort) }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5 bg-white rounded-4 shadow-sm my-4">
+        <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+        <h4 class="fw-bold mt-3">Không tìm thấy sản phẩm phù hợp</h4>
+        <p class="text-muted">Hãy thử thay đổi từ khóa tìm kiếm hoặc bỏ chọn các bộ lọc danh mục/thương hiệu.</p>
+        <a href="{{ url_for('products.catalog') }}" class="btn btn-gold rounded-pill px-4 mt-2">
+            Xem toàn bộ sản phẩm
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
